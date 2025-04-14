@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AirQuality Dashboard</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231a2a6c'/%3E%3Cpath fill='rgba(255, 255, 255, 0.7)' d='M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z' transform='scale(0.6) translate(8, 8)'/%3E%3C/svg%3E"
+        type="image/svg+xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #08095b, #13a9df);
+            background-size: 300% 300%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: gradient 15s ease infinite;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Outermost circle with only border */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 97vmin;
+            height: 97vmin;
+            border-radius: 50%;
+            border: 2px solid rgba(19, 169, 223, 0.15);
+            box-shadow: 0 0 30px rgba(19, 169, 223, 0.1);
+            z-index: -3;
+            animation: borderPulse 10s ease-in-out infinite;
+        }
+
+        /* Middle circle */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vmin;
+            height: 80vmin;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(30, 41, 59, 0.4) 0%, rgba(17, 24, 39, 0.2) 70%, rgba(10, 15, 25, 0.1) 100%);
+            box-shadow: 0 0 30px rgba(19, 169, 223, 0.2);
+            z-index: -2;
+            animation: outerGlow 8s ease-in-out infinite;
+        }
+
+        /* Inner circle - using a pseudo-element of body for better positioning */
+        .inner-circle {
+            display: none;
+        }
+
+        /* Animated dots */
+        .orbiting-dot {
+            position: absolute;
+            top: calc(50% - 5px);
+            left: calc(50% - 5px);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            transform-origin: 5px 5px;
+            z-index: -1;
+        }
+
+        .orbiting-dot:nth-child(1) {
+            background-color: #ffffff;
+            animation: orbit 18s linear infinite;
+        }
+
+        .orbiting-dot:nth-child(2) {
+            background-color: #4cd2ff;
+            animation: orbit-reverse 20s linear infinite;
+        }
+
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateX(48.5vmin);
+            }
+
+            to {
+                transform: rotate(360deg) translateX(48.5vmin);
+            }
+        }
+
+        @keyframes orbit-reverse {
+            from {
+                transform: rotate(0deg) translateX(48.5vmin);
+            }
+
+            to {
+                transform: rotate(-360deg) translateX(48.5vmin);
+            }
+        }
+
+        @keyframes borderPulse {
+            0%, 100% {
+                border-color: rgba(19, 169, 223, 0.15);
+                box-shadow: 0 0 30px rgba(19, 169, 223, 0.1);
+            }
+            50% {
+                border-color: rgba(19, 169, 223, 0.3);
+                box-shadow: 0 0 50px rgba(19, 169, 223, 0.2);
+            }
+        }
+
+        @keyframes outerGlow {
+            0%, 100% {
+                box-shadow: 0 0 30px rgba(19, 169, 223, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 50px rgba(19, 169, 223, 0.3);
+            }
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Responsive adjustments for the circles */
+        @media (max-width: 768px) {
+            body::before {
+                width: 110vmin;
+                height: 110vmin;
+            }
+
+            body::after {
+                width: 90vmin;
+                height: 90vmin;
+            }
+
+            @keyframes orbit {
+                from {
+                    transform: rotate(0deg) translateX(55vmin);
+                }
+
+                to {
+                    transform: rotate(360deg) translateX(55vmin);
+                }
+            }
+
+            @keyframes orbit-reverse {
+                from {
+                    transform: rotate(0deg) translateX(55vmin);
+                }
+
+                to {
+                    transform: rotate(-360deg) translateX(55vmin);
+                }
+            }
+        }
+
+        /* Ensure better visibility on very small screens */
+        @media (max-width: 480px) {
+            .orbiting-dot {
+                width: 8px;
+                height: 8px;
+                top: calc(50% - 4px);
+                left: calc(50% - 4px);
+                transform-origin: 4px 4px;
+            }
+        }
+
+        .auth-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+            width: 90%;
+            max-width: 380px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-logo {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 16px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #4158D0, #08095b);
+            border-radius: 50%;
+            padding: 12px;
+        }
+
+        .auth-logo svg {
+            width: 100%;
+            height: 100%;
+            fill: white;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .auth-form {
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .form-field {
+            position: relative;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            padding: 12px;
+        }
+
+        .form-field:focus-within {
+            border-color: #4158D0;
+            border-width: 2px;
+            box-shadow: none;
+            background-color: #fff;
+        }
+
+        label {
+            display: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            font-size: 0.95rem;
+            background-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: transparent;
+            outline: none;
+            box-shadow: none;
+            background-color: transparent;
+        }
+
+        input::placeholder {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .form-error {
+            color: #e53935;
+            font-size: 0.8rem;
+            margin: 0 0 12px 0;
+            min-height: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .form-error:not(:empty) {
+            min-height: 20px;
+            max-height: 60px;
+            padding: 4px 0;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #4158D0, #08095b);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            box-shadow: none;
+            transform: translateY(0);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .auth-links {
+            margin-top: 18px;
+            color: #666;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .auth-links a {
+            color: #4158D0;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .auth-links a:hover {
+            color: #3b51b3;
+            text-decoration: underline;
+        }
+
+        .forgot-password-link {
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 25px 20px;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+                margin-bottom: 16px;
+            }
+
+            .auth-logo {
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="orbiting-dot"></div>
+    <div class="orbiting-dot"></div>
+    <div class="auth-container">
+        <div class="auth-logo">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" />
+            </svg>
+        </div>
+        <h1>Welcome Back</h1>
+
+        <div class="auth-form">
+            <div class="form-group">
+                <div class="form-field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Email" required>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2px;">
+                <div class="form-field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                </div>
+                <div style="text-align: right; margin-top: 3px; font-size: 0.8rem;">
+                    <a href="forgot-password.html"
+                        style="color: #4158D0; text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                </div>
+            </div>
+
+            <div class="form-error" id="login-error"></div>
+
+            <button type="button" id="login-btn" class="btn-primary">
+                Login
+                <span class="spinner"></span>
+            </button>
+        </div>
+
+        <div class="auth-links">
+            Don't have an account? <a href="register.html">Register</a>
+        </div>
+    </div>
+
+    <!-- Include auth.js instead of Supabase -->
+    <script src="js/auth.js"></script>
+
+    <script>
+        // DOM Elements
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const { isLoggedIn } = await checkAuthStatus();
+                if (isLoggedIn) {
+                    // Redirect to dashboard if already logged in
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        });
+
+        // Event Listeners
+        loginButton.addEventListener('click', handleLogin);
+
+        // Also listen for Enter key in password field
+        passwordInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });
+
+        // Login function
+        async function handleLogin() {
+            // Clear previous errors
+            loginError.textContent = '';
+
+            // Validate inputs
+            if (!emailInput.value.trim()) {
+                loginError.textContent = 'Email is required';
+                emailInput.focus();
+                return;
+            }
+
+            if (!isValidEmail(emailInput.value.trim())) {
+                loginError.textContent = 'Please enter a valid email address';
+                emailInput.focus();
+                return;
+            }
+
+            if (!passwordInput.value) {
+                loginError.textContent = 'Password is required';
+                passwordInput.focus();
+                return;
+            }
+            // Update your login page to show expiration message
+if (window.location.href.includes('expired=true')) {
+    // Show message that session has expired
+    const messageElement = document.getElementById('login-message');
+    if (messageElement) {
+        messageElement.textContent = 'Your session has expired. Please login again.';
+        messageElement.style.color = 'var(--warning)';
+    }
+}
+            // Show loading state
+            loginButton.classList.add('btn-loading');
+            loginButton.disabled = true;
+
+            try {
+                // Call login function from auth.js
+                const result = await loginUser(emailInput.value.trim(), passwordInput.value);
+
+                if (result.success) {
+                    // Redirect to dashboard on successful login
+                    window.location.href = 'dashboard.html';
+                } else {
+                    // Show error
+                    loginError.textContent = result.message || 'Login failed. Please try again.';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                loginError.textContent = 'An error occurred. Please try again later.';
+            } finally {
+                // Reset loading state
+                loginButton.classList.remove('btn-loading');
+                loginButton.disabled = false;
+            }
+        }
+
+        // Email validation function
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+    </script>
+</body>
+
+</html>

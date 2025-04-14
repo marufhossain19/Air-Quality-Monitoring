@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Dashboard</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231a2a6c'/%3E%3Cpath fill='rgba(255, 255, 255, 0.7)' d='M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z' transform='scale(0.6) translate(8, 8)'/%3E%3C/svg%3E"
+        type="image/svg+xml">
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Annotation plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <!-- Auth.js for user authentication -->
+    <script src="js/auth.js"></script>
+    <!-- Sensor data operations -->
+    <script src="js/sensor-data.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1a2a6c;
+            --secondary-color: #13a9df;
+            --accent-color: #08095b;
+            --text-color: #333;
+            --text-light: #6b7280;
+            --white: #fff;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --info: #3b82f6;
+            --background: linear-gradient(135deg, #1a2a6c, #08095b, #13a9df);
+        }
+
+        /* Alert popup styles */
+        .alert-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease forwards;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .alert-box {
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 450px;
+            overflow: hidden;
+            position: relative;
+            animation: scaleIn 0.4s ease forwards;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .alert-header {
+            background-color: #FFBF00;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .alert-icon-circle {
+            width: 60px;
+            height: 60px;
+            background-color: #FF3A3A;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            border: 4px solid #fff;
+        }
+
+        .alert-icon-circle svg {
+            width: 30px;
+            height: 30px;
+            color: white;
+        }
+
+        .alert-date {
+            font-size: 0.85rem;
+            color: #3A1078;
+            margin-top: 4px;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .alert-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3A1078;
+            margin-bottom: 4px;
+        }
+
+        .alert-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 26px;
+            height: 26px;
+            background-color: #3A1078;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .alert-close:hover {
+            background-color: #280a57;
+        }
+
+        .alert-body {
+            padding: 24px;
+        }
+
+        .alert-message {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .alert-button {
+            background-color: #FF3A3A;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(255, 58, 58, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .alert-button:hover {
+            background-color: #e62e2e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 58, 58, 0.4);
+        }
+
+        .alert-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 8px rgba(255, 58, 58, 0.3);
+        }
+
+        /* Alert type variations */
+        .alert-box.temperature .alert-header {
+            background-color: #FFBF00;
+        }
+
+        .alert-box.temperature .alert-icon-circle {
+            background-color: #FF3A3A;
+        }
+
+        .alert-box.temperature .alert-button {
+            background-color: #FF3A3A;
+            box-shadow: 0 4px 12px rgba(255, 58, 58, 0.3);
+        }
+
+        .alert-box.humidity .alert-header {
+            background-color: #A2DBFA;
+        }
+
+        .alert-box.humidity .alert-icon-circle {
+            background-color: #3B82F6;
+        }
+
+        .alert-box.humidity .alert-button {
+            background-color: #3B82F6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .alert-box.lpg .alert-header {
+            background-color: #E4C1F9;
+        }
+
+        .alert-box.lpg .alert-icon-circle {
+            background-color: #8B5CF6;
+        }
+
+        .alert-box.lpg .alert-button {
+            background-color: #8B5CF6;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .alert-box.dust .alert-header {
+            background-color: #A5F1E9;
+        }
+
+        .alert-box.dust .alert-icon-circle {
+            background-color: #10B981;
+        }
+
+        .alert-box.dust .alert-button {
+            background-color: #10B981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .alert-box.multiple .alert-header {
+            background-color: #FEE2E2;
+        }
+
+        .alert-box.multiple .alert-icon-circle {
+            background-color: #EF4444;
+        }
+
+        .alert-box.multiple .alert-button {
+            background-color: #EF4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            background-size: 200% 200%;
+            min-height: 100vh;
+            animation: gradient 30s ease infinite;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .header {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1000;
+            gap: 1rem;
+        }
+
+        .dashboard-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dashboard-logo {
+            width: 36px;
+            height: 36px;
+            color: var(--primary-color);
+        }
+
+        .dashboard-logo svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .dashboard-title h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            white-space: nowrap;
+        }
+
+        .dashboard-btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            padding: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .dashboard-btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-profile:hover {
+            background-color: var(--accent-color);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-span-12 {
+            grid-column: span 12;
+        }
+
+        .card-span-6 {
+            grid-column: span 6;
+        }
+
+        @media (max-width: 1024px) {
+            .card-span-6 {
+                grid-column: span 12;
+            }
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .readings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .reading-item {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+            transition: transform 0.2s ease, border-color 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .reading-item[data-metric="temperature"] {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .reading-item[data-metric="humidity"] {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .reading-item[data-metric="lpg"] {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .reading-item[data-metric="dust"] {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .reading-item:hover {
+            transform: translateY(-5px);
+            border-color: #000000;
+            border-width: 3px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .reading-label {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--white);
+        }
+
+        .reading-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: var(--white);
+        }
+
+        .reading-unit {
+            font-size: 0.9rem;
+            color: var(--white);
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-btn {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .filter-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        .recent-readings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .recent-readings-table th,
+        .recent-readings-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .recent-readings-table th {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .recent-readings-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .date-column {
+            white-space: nowrap;
+        }
+
+        .value-cell {
+            font-weight: 600;
+        }
+
+        .value-cell.above-threshold {
+            color: var(--danger);
+        }
+
+        /* Animation classes */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sensor-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Add styles for values that exceed thresholds */
+        .reading-value.above-threshold,
+        .value-cell.above-threshold {
+            color: var(--danger);
+            font-weight: 700;
+            position: relative;
+        }
+
+        .reading-value.above-threshold::after {
+            content: "!";
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--danger);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Loading animation for refresh button */
+        .dashboard-btn.loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .dashboard-btn.loading svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-title h1 {
+                font-size: 1.1rem;
+            }
+
+            .header {
+                padding: 0.75rem 1rem;
+            }
+
+            .user-menu {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .readings-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .card-span-6 {
+                grid-column: span 12;
+            }
+
+            .dashboard-grid {
+                gap: 1rem;
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .reading-value {
+                font-size: 1.5rem;
+            }
+
+            .reading-label {
+                font-size: 0.9rem;
+            }
+
+            .reading-unit {
+                font-size: 0.8rem;
+            }
+
+            .chart-controls {
+                flex-wrap: nowrap;
+                gap: 0.3rem;
+            }
+
+            .filter-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .readings-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .reading-value {
+                font-size: 1.25rem;
+            }
+
+            .reading-label {
+                font-size: 0.8rem;
+            }
+
+            .reading-unit {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Add styles for settings dropdown */
+        .settings-wrapper {
+            position: relative;
+        }
+
+        .settings-btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            padding: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .settings-btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .settings-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            display: none;
+            z-index: 1100;
+            margin-top: 0.5rem;
+        }
+
+        .settings-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .settings-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .settings-item.logout {
+            color: var(--danger);
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .settings-item.logout:hover {
+            background-color: #f26363;
+            color: white;
+        }
+
+        .settings-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            padding: 0.75rem;
+            cursor: pointer;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .mobile-menu-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .mobile-menu-dropdown {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: var(--primary-color);
+            border-radius: 12px;
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+            padding: 0.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-menu-dropdown.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .mobile-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin-bottom: 0.25rem;
+        }
+
+        .mobile-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-menu-item.logout {
+            background-color: #ef4444;
+            color: var(--white);
+        }
+
+        .mobile-menu-item.logout:hover {
+            background-color: #dc2626;
+        }
+
+        .mobile-menu-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .user-menu {
+                display: none;
+            }
+        }
+
+        /* Mobile menu item status styles */
+        .mobile-menu-item#mobile-status.online {
+            background-color: #10b981;
+        }
+
+        .mobile-menu-item#mobile-status.offline {
+            background-color: #ef4444;
+        }
+
+        /* Connection status styles */
+        .connection-status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            margin-left: auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .connection-status.online {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .connection-status.offline {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .connection-status::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .connection-status.online::before {
+            background-color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .connection-status.offline::before {
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Offline mode styles */
+        .offline-mode .card {
+            opacity: 0.85;
+            position: relative;
+        }
+
+        .offline-mode .card::after {
+            content: "";
+            position: absolute;
+        }
+
+        /* Notification popup */
+        .offline-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #A2DBFA;
+            color: #3A1078;
+            padding: 20px;
+            border-radius: 16px;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            font-size: 16px;
+            font-weight: 500;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeInOut 2s forwards;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: left 0.4s ease-in-out, transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+        }
+
+        /* Position classes for alerts and notifications */
+        .alert-backdrop.shift-left {
+            justify-content: flex-start;
+            padding-left: 5%;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .offline-notification.shift-right {
+            left: 75%;
+            transition: all 0.4s ease-in-out;
+        }
+
+        /* Mobile positioning for alerts and status windows */
+        @media (max-width: 768px) {
+            .alert-backdrop.shift-left {
+                justify-content: center;
+                padding-left: 0;
+                align-items: flex-start;
+                padding-top: 15%;
+            }
+
+            .offline-notification.shift-right {
+                left: 50%;
+                top: 75%;
+            }
+        }
+
+        .offline-notification-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #3B82F6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            border: 3px solid #fff;
+        }
+
+        .offline-notification-icon svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .offline-notification-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #3A1078;
+            margin-bottom: 8px;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+
+            10% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+
+            90% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+        }
+
+        /* Mobile animations for stacked positioning */
+        @media (max-width: 768px) {
+            @keyframes fadeInOut {
+                0% {
+                    opacity: 0;
+                    transform: translate(-50%, -60%);
+                }
+
+                10% {
+                    opacity: 1;
+                    transform: translate(-50%, -50%);
+                }
+
+                90% {
+                    opacity: 1;
+                    transform: translate(-50%, -50%);
+                }
+
+                100% {
+                    opacity: 0;
+                    transform: translate(-50%, -60%);
+                }
+            }
+
+            .offline-notification.shift-right {
+                animation: fadeInOut 2s forwards;
+            }
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease-out;
+            z-index: 9999;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification-icon {
+            margin-right: 12px;
+            color: var(--primary-color);
+        }
+
+        .notification-message {
+            flex: 1;
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            margin-left: 8px;
+            padding: 4px;
+            border-radius: 50%;
+        }
+
+        .notification-close:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .notification-success .notification-icon {
+            color: var(--success);
+        }
+
+        .notification-error .notification-icon {
+            color: var(--danger);
+        }
+
+        .notification-warning .notification-icon {
+            color: var(--warning);
+        }
+
+        .notification-info .notification-icon {
+            color: var(--info);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Alert container for notifications -->
+    <div id="alert-container"></div>
+
+    <div id="app">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="dashboard-title">
+                    <div class="dashboard-logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" />
+                        </svg>
+                    </div>
+                    <h1>Air Quality Dashboard</h1>
+                </div>
+
+                <div class="user-menu">
+                    <div class="user-profile">
+                        <span id="user-fullname">User</span>
+                    </div>
+
+                    <button id="refresh-btn" class="dashboard-btn" title="Refresh Data">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6"></path>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                    </button>
+
+                    <div class="settings-wrapper">
+                        <button id="settings-btn" class="settings-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div id="settings-dropdown" class="settings-dropdown">
+                            <button id="logout-btn" class="settings-item logout">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+                                </svg>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-btn" class="mobile-menu-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobile-menu-dropdown" class="mobile-menu-dropdown">
+                <button class="mobile-menu-item" id="mobile-user-profile">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span id="mobile-user-fullname">Baby Panda</span>
+                </button>
+                <button class="mobile-menu-item" id="mobile-status">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                    </svg>
+                    <span id="mobile-connection-status">Online</span>
+                </button>
+                <button class="mobile-menu-item logout" id="mobile-logout-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Current Readings Card -->
+                <div class="card card-span-12 fade-in" style="animation-delay: 0.2s;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="sensor-indicator" style="background-color: var(--secondary-color);"></span>
+                            Current Readings
+                        </div>
+                        <div id="connection-status" class="connection-status online">Online</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="readings-grid">
+                            <div class="reading-item" data-metric="temperature">
+                                <div class="reading-label">Temperature</div>
+                                <div id="temperature-value" class="reading-value">0</div>
+                                <div class="reading-unit">°C</div>
+                            </div>
+                            <div class="reading-item" data-metric="humidity">
+                                <div class="reading-label">Humidity</div>
+                                <div id="humidity-value" class="reading-value">0</div>
+                                <div class="reading-unit">%</div>
+                            </div>
+                            <div class="reading-item" data-metric="lpg">
+                                <div class="reading-label">LPG</div>
+                                <div id="lpg-value" class="reading-value">0</div>
+                                <div class="reading-unit">ppm</div>
+                            </div>
+                            <div class="reading-item" data-metric="dust">
+                                <div class="reading-label">Dust</div>
+                                <div id="dust-value" class="reading-value">0</div>
+                                <div class="reading-unit">µg/m³</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Readings Card -->
+                <div class="card card-span-6 fade-in" style="animation-delay: 0.3s;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="sensor-indicator" style="background-color: var(--success);"></span>
+                            Last 5 Readings
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-controls">
+                            <button class="filter-btn active" data-metric="temperature">Temperature</button>
+                            <button class="filter-btn" data-metric="humidity">Humidity</button>
+                            <button class="filter-btn" data-metric="lpg">LPG</button>
+                            <button class="filter-btn" data-metric="dust">Dust</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="recent-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Trends Card -->
+                <div class="card card-span-6 fade-in" style="animation-delay: 0.3s;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="sensor-indicator" style="background-color: var(--info);"></span>
+                            Weekly Trends
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-controls">
+                            <button class="filter-btn active" data-metric="temperature">Temperature</button>
+                            <button class="filter-btn" data-metric="humidity">Humidity</button>
+                            <button class="filter-btn" data-metric="lpg">LPG</button>
+                            <button class="filter-btn" data-metric="dust">Dust</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="weekly-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Overview Card -->
+                <div class="card card-span-12 fade-in" style="animation-delay: 0.4s;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="sensor-indicator" style="background-color: var(--warning);"></span>
+                            Monthly Overview
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-controls">
+                            <button class="filter-btn active" data-metric="temperature">Temperature</button>
+                            <button class="filter-btn" data-metric="humidity">Humidity</button>
+                            <button class="filter-btn" data-metric="lpg">LPG</button>
+                            <button class="filter-btn" data-metric="dust">Dust</button>
+                        </div>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="monthly-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const temperatureValue = document.getElementById('temperature-value');
+        const humidityValue = document.getElementById('humidity-value');
+        const lpgValue = document.getElementById('lpg-value');
+        const dustValue = document.getElementById('dust-value');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsDropdown = document.getElementById('settings-dropdown');
+        const userFullName = document.getElementById('user-fullname');
+
+        // Chart instances
+        let recentChartInstance = null;
+        let weeklyChartInstance = null;
+        let monthlyChartInstance = null;
+
+        // Current selected metrics
+        let currentRecentMetric = 'temperature';
+        let currentWeeklyMetric = 'temperature';
+        let currentMonthlyMetric = 'temperature';
+
+        // Check if user is logged in
+        async function checkAuth() {
+            const result = await checkAuthStatus();
+            if (!result.isLoggedIn) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            return result.user;
+        }
+
+        // Initialize user profile
+        async function initUserProfile() {
+            const user = await checkAuth();
+            if (user) {
+                const userName = user.username || user.email.split('@')[0];
+                userFullName.textContent = userName;
+                updateMobileUserName(userName);
+            }
+        }
+
+        // Update mobile menu user display
+        function updateMobileUserName(name) {
+            const mobileUserName = document.getElementById('mobile-username');
+            if (mobileUserName) {
+                mobileUserName.textContent = name;
+            }
+        }
+
+        // Initialize the dashboard
+        async function initDashboard() {
+            // Fetch data initially
+            refreshData();
+
+            // Set up auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+
+            // Initialize profile
+            await initUserProfile();
+
+            // Setup event listeners
+            setupEventListeners();
+        }
+
+        // Refresh all data
+        async function refreshData() {
+            try {
+                // Get latest reading
+                const latestReading = await SensorData.getLatestReading();
+                updateCurrentReadings(latestReading);
+
+                // Get last 5 readings
+                const last5Readings = await SensorData.getLast5Readings();
+                updateRecentChart(last5Readings);
+
+                // Get weekly data
+                const weeklyData = await SensorData.getWeeklyAverages();
+                updateWeeklyChart(weeklyData);
+
+                // Get monthly data
+                const monthlyData = await SensorData.getMonthlyAverages();
+                updateMonthlyChart(monthlyData);
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showNotification('Error refreshing data', 'error');
+            }
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Refresh button
+            refreshBtn.addEventListener('click', () => {
+                refreshData();
+                showNotification('Data refreshed', 'success');
+            });
+
+            // Logout button
+            logoutBtn.addEventListener('click', () => {
+                logoutUser();
+            });
+
+            // Settings button toggle
+            settingsBtn.addEventListener('click', () => {
+                settingsDropdown.classList.toggle('active');
+            });
+
+            // Close settings when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!settingsBtn.contains(e.target) && !settingsDropdown.contains(e.target)) {
+                    settingsDropdown.classList.remove('active');
+                }
+            });
+
+            // Chart filter buttons
+            setupChartFilters();
+        }
+
+        // Set up chart filter buttons
+        function setupChartFilters() {
+            // Recent chart filter buttons
+            const recentFilterBtns = document.querySelectorAll('.card:nth-child(2) .filter-btn');
+            recentFilterBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    recentFilterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentRecentMetric = this.dataset.metric;
+                    SensorData.getLast5Readings().then(updateRecentChart);
+                });
+            });
+
+            // Weekly chart filter buttons
+            const weeklyFilterBtns = document.querySelectorAll('.card:nth-child(3) .filter-btn');
+            weeklyFilterBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    weeklyFilterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentWeeklyMetric = this.dataset.metric;
+                    SensorData.getWeeklyAverages().then(updateWeeklyChart);
+                });
+            });
+
+            // Monthly chart filter buttons
+            const monthlyFilterBtns = document.querySelectorAll('.card:nth-child(4) .filter-btn');
+            monthlyFilterBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    monthlyFilterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentMonthlyMetric = this.dataset.metric;
+                    SensorData.getMonthlyAverages().then(updateMonthlyChart);
+                });
+            });
+        }
+
+        // Create notification popup
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+
+            // Add icon based on type
+            let icon = '';
+            switch (type) {
+                case 'success':
+                    icon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+                    break;
+                case 'error':
+                    icon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                    break;
+                case 'warning':
+                    icon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+                    break;
+                default:
+                    icon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+            }
+
+            // Set notification content
+            notification.innerHTML = `
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-message">${message}</div>
+                <button class="notification-close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            `;
+
+            // Append to body
+            document.body.appendChild(notification);
+
+            // Add show class after a short delay (for animation)
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+
+            // Add close event
+            const closeBtn = notification.querySelector('.notification-close');
+            closeBtn.addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            });
+
+            // Auto close after 3 seconds
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (document.body.contains(notification)) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Update current readings display
+        function updateCurrentReadings(data) {
+            if (!data) return;
+
+            // Use GSAP to animate values
+            gsap.to(temperatureValue, {
+                textContent: data.temperature.toFixed(1),
+                duration: 1,
+                ease: "power2.out",
+                snap: { textContent: 0.1 },
+            });
+
+            gsap.to(humidityValue, {
+                textContent: Math.round(data.humidity),
+                duration: 1,
+                ease: "power2.out",
+                snap: { textContent: 1 },
+            });
+
+            gsap.to(lpgValue, {
+                textContent: Math.round(data.lpg),
+                duration: 1,
+                ease: "power2.out",
+                snap: { textContent: 1 },
+            });
+
+            gsap.to(dustValue, {
+                textContent: data.dust.toFixed(1),
+                duration: 1,
+                ease: "power2.out",
+                snap: { textContent: 0.1 },
+            });
+
+            // Highlight values that exceed threshold
+            temperatureValue.classList.toggle('above-threshold', SensorData.isAboveThreshold(data.temperature, 'temperature'));
+            humidityValue.classList.toggle('above-threshold', SensorData.isAboveThreshold(data.humidity, 'humidity'));
+            lpgValue.classList.toggle('above-threshold', SensorData.isAboveThreshold(data.lpg, 'lpg'));
+            dustValue.classList.toggle('above-threshold', SensorData.isAboveThreshold(data.dust, 'dust'));
+        }
+
+        // Add this helper function after DOM Elements
+        function getMetricColors(metric) {
+            switch (metric) {
+                case 'temperature':
+                    return {
+                        mainColor: '#10b981',
+                        bgColor: 'rgba(16, 185, 129, 0.2)'
+                    };
+                case 'humidity':
+                    return {
+                        mainColor: '#3b82f6',
+                        bgColor: 'rgba(59, 130, 246, 0.2)'
+                    };
+                case 'lpg':
+                    return {
+                        mainColor: '#f59e0b',
+                        bgColor: 'rgba(245, 158, 11, 0.2)'
+                    };
+                case 'dust':
+                    return {
+                        mainColor: '#8b5cf6',
+                        bgColor: 'rgba(139, 92, 246, 0.2)'
+                    };
+            }
+        }
+
+        // Initialize recent readings chart
+        function initRecentChart(readings, metric = currentRecentMetric) {
+            const ctx = document.getElementById('recent-chart').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (recentChartInstance) {
+                recentChartInstance.destroy();
+            }
+
+            // Exit if no readings
+            if (!readings || !readings.length) return;
+
+            // Reverse the readings array to show latest on right
+            const reversedReadings = [...readings].reverse();
+
+            // Extract data for the selected metric
+            const values = reversedReadings.map(item => parseFloat(item[metric]));
+
+            // Format dates for display - simplified format
+            const timestamps = reversedReadings.map(item => {
+                const date = new Date(item.timestamp);
+                return {
+                    time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    day: date.toLocaleDateString('en-US', { weekday: 'short' })
+                };
+            });
+
+            // Determine threshold based on metric
+            const thresholdValue = SensorData.getThresholdForMetric(metric);
+            let threshold = metric === 'humidity' ? thresholdValue.max : thresholdValue;
+            let thresholdLabel = `${SensorData.getMetricDisplayName(metric)} Threshold (${threshold}${SensorData.getMetricUnit(metric)})`;
+
+            // Get the color for this metric
+            const colors = getMetricColors(metric);
+            const metricBgColor = values.map(value => {
+                if (metric === 'humidity') {
+                    return (value > thresholdValue.max || value < thresholdValue.min) ? 'rgba(255, 0, 0, 0.7)' : colors.bgColor;
+                } else {
+                    return value > threshold ? 'rgba(255, 0, 0, 0.7)' : colors.bgColor;
+                }
+            });
+
+            // Create border colors array based on threshold
+            const borderColors = values.map(value => {
+                if (metric === 'humidity') {
+                    return (value > thresholdValue.max || value < thresholdValue.min) ? '#ff0000' : colors.mainColor;
+                } else {
+                    return value > threshold ? '#ff0000' : colors.mainColor;
+                }
+            });
+
+            // Create annotations based on metric
+            const annotations = {};
+
+            // Add the max threshold line
+            annotations.maxLine = {
+                type: 'line',
+                yMin: threshold,
+                yMax: threshold,
+                borderColor: '#ff0000',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                label: {
+                    display: true,
+                    content: thresholdLabel,
+                    position: 'end',
+                    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                    font: {
+                        size: 10
+                    }
+                }
+            };
+
+            // Add min threshold line for humidity
+            if (metric === 'humidity') {
+                annotations.minLine = {
+                    type: 'line',
+                    yMin: thresholdValue.min,
+                    yMax: thresholdValue.min,
+                    borderColor: '#ff0000',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    label: {
+                        display: true,
+                        content: `Min Humidity (${thresholdValue.min}%)`,
+                        position: 'start',
+                        backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                        font: {
+                            size: 10
+                        }
+                    }
+                };
+            }
+
+            // Create chart
+            recentChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: timestamps.map(t => t.time), // Just use time for labels
+                    datasets: [{
+                        label: SensorData.getMetricDisplayName(metric),
+                        data: values,
+                        backgroundColor: metricBgColor,
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${SensorData.getMetricDisplayName(metric)}: ${context.raw.toFixed(1)} ${SensorData.getMetricUnit(metric)}`;
+                                },
+                                title: function (context) {
+                                    const idx = context[0].dataIndex;
+                                    return `${timestamps[idx].day} ${timestamps[idx].time}`;
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: annotations
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(136, 136, 136, 0.2)',
+                                lineWidth: 1,
+                                drawBorder: false,
+                                drawOnChartArea: true,
+                                drawTicks: false,
+                                borderDash: [5, 5],
+                                zeroLineWidth: 1
+                            },
+                            ticks: {
+                                color: '#000000',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#000000',
+                                font: {
+                                    weight: 'bold'
+                                },
+                                maxRotation: 0,
+                                minRotation: 0,
+                                // Set maximum number of ticks to show
+                                maxTicksLimit: 5,
+                                callback: function (val, index, ticks) {
+                                    // Show only some time labels for cleaner display
+                                    const totalTicks = ticks.length;
+
+                                    // For 5 or fewer readings, show all times
+                                    if (totalTicks <= 5) {
+                                        return timestamps[index].time;
+                                    }
+
+                                    // For more readings, show first, last, and evenly spaced times in between
+                                    if (index === 0 || index === totalTicks - 1 || index % Math.ceil(totalTicks / 5) === 0) {
+                                        return timestamps[index].time;
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize weekly chart
+        function initWeeklyChart(data, metric = currentWeeklyMetric) {
+            const ctx = document.getElementById('weekly-chart').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (weeklyChartInstance) {
+                weeklyChartInstance.destroy();
+            }
+
+            if (!data || !data.length) return;
+
+            // Extract data for the selected metric
+            const values = data.map(item => parseFloat(item[metric]));
+            const dates = data.map(item => SensorData.getDayName(item.date));
+
+            // Determine threshold based on metric
+            const thresholdValue = SensorData.getThresholdForMetric(metric);
+            let threshold = metric === 'humidity' ? thresholdValue.max : thresholdValue;
+            let thresholdLabel = `${SensorData.getMetricDisplayName(metric)} Threshold (${threshold}${SensorData.getMetricUnit(metric)})`;
+
+            // Get the color for this metric
+            const colors = getMetricColors(metric);
+            const metricBgColor = values.map(value => {
+                if (metric === 'humidity') {
+                    return (value > thresholdValue.max || value < thresholdValue.min) ? 'rgba(255, 0, 0, 0.7)' : colors.bgColor;
+                } else {
+                    return value > threshold ? 'rgba(255, 0, 0, 0.7)' : colors.bgColor;
+                }
+            });
+
+            // Create border colors array based on threshold
+            const borderColors = values.map(value => {
+                if (metric === 'humidity') {
+                    return (value > thresholdValue.max || value < thresholdValue.min) ? '#ff0000' : colors.mainColor;
+                } else {
+                    return value > threshold ? '#ff0000' : colors.mainColor;
+                }
+            });
+
+            // Create annotations based on metric
+            const annotations = {};
+
+            // Add the max threshold line
+            annotations.maxLine = {
+                type: 'line',
+                yMin: threshold,
+                yMax: threshold,
+                borderColor: '#ff0000',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                label: {
+                    display: true,
+                    content: thresholdLabel,
+                    position: 'end',
+                    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                    font: {
+                        size: 10
+                    }
+                }
+            };
+
+            // Add min threshold line for humidity
+            if (metric === 'humidity') {
+                annotations.minLine = {
+                    type: 'line',
+                    yMin: thresholdValue.min,
+                    yMax: thresholdValue.min,
+                    borderColor: '#ff0000',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    label: {
+                        display: true,
+                        content: `Min Humidity (${thresholdValue.min}%)`,
+                        position: 'start',
+                        backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                        font: {
+                            size: 10
+                        }
+                    }
+                };
+            }
+
+            // Create chart
+            weeklyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: SensorData.getMetricDisplayName(metric),
+                        data: values,
+                        backgroundColor: metricBgColor,
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${SensorData.getMetricDisplayName(metric)}: ${context.raw.toFixed(1)} ${SensorData.getMetricUnit(metric)}`;
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: annotations
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(136, 136, 136, 0.2)',
+                                lineWidth: 1,
+                                drawBorder: false,
+                                drawOnChartArea: true,
+                                drawTicks: false,
+                                borderDash: [5, 5],
+                                zeroLineWidth: 1
+                            },
+                            ticks: {
+                                color: '#000000',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#000000',
+                                font: {
+                                    weight: 'bold'
+                                },
+                                // Ensure all labels are displayed
+                                autoSkip: false,
+                                // Allow slight rotation if needed for better fit
+                                maxRotation: 15,
+                                callback: function (val, index) {
+                                    // Always return the date label
+                                    return dates[index];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize monthly chart
+        function initMonthlyChart(data, metric = currentMonthlyMetric) {
+            const ctx = document.getElementById('monthly-chart').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (monthlyChartInstance) {
+                monthlyChartInstance.destroy();
+            }
+
+            if (!data || !data.length) return;
+
+            // Extract data for the selected metric
+            const values = data.map(item => parseFloat(item[metric]));
+
+            // Format dates in a more compact way
+            const formattedDates = data.map(item => {
+                const date = new Date(item.date);
+                return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+            });
+
+            // Determine threshold based on metric
+            const thresholdValue = SensorData.getThresholdForMetric(metric);
+            let threshold = metric === 'humidity' ? thresholdValue.max : thresholdValue;
+            let thresholdLabel = `${SensorData.getMetricDisplayName(metric)} Threshold (${threshold}${SensorData.getMetricUnit(metric)})`;
+
+            // Get the color for this metric
+            const colors = getMetricColors(metric);
+
+            // Create point background colors based on threshold
+            const pointBackgroundColors = values.map(value => {
+                if (metric === 'humidity') {
+                    return (value > thresholdValue.max || value < thresholdValue.min) ? '#ff0000' : colors.mainColor;
+                } else {
+                    return value > threshold ? '#ff0000' : colors.mainColor;
+                }
+            });
+
+            // Create annotations based on metric
+            const annotations = {};
+
+            // Add the max threshold line
+            annotations.maxLine = {
+                type: 'line',
+                yMin: threshold,
+                yMax: threshold,
+                borderColor: '#ff0000',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                label: {
+                    display: true,
+                    content: thresholdLabel,
+                    position: 'end',
+                    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                    font: {
+                        size: 10
+                    }
+                }
+            };
+
+            // Add min threshold line for humidity
+            if (metric === 'humidity') {
+                annotations.minLine = {
+                    type: 'line',
+                    yMin: thresholdValue.min,
+                    yMax: thresholdValue.min,
+                    borderColor: '#ff0000',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    label: {
+                        display: true,
+                        content: `Min Humidity (${thresholdValue.min}%)`,
+                        position: 'start',
+                        backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                        font: {
+                            size: 10
+                        }
+                    }
+                };
+            }
+
+            // Create chart
+            monthlyChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: formattedDates,
+                    datasets: [{
+                        label: SensorData.getMetricDisplayName(metric),
+                        data: values,
+                        borderColor: colors.mainColor,
+                        backgroundColor: colors.bgColor,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: pointBackgroundColors,
+                        pointBorderColor: '#ffffff', // Add white border color
+                        pointBorderWidth: 2,         // Add border width
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${SensorData.getMetricDisplayName(metric)}: ${context.raw.toFixed(1)} ${SensorData.getMetricUnit(metric)}`;
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: annotations
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(136, 136, 136, 0.2)',
+                                lineWidth: 1,
+                                drawBorder: false,
+                                drawOnChartArea: true,
+                                drawTicks: false,
+                                borderDash: [5, 5],
+                                zeroLineWidth: 1
+                            },
+                            ticks: {
+                                color: '#000000',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#000000',
+                                font: {
+                                    weight: 'bold'
+                                },
+                                // Remove maxRotation and set maxTicksLimit
+                                maxTicksLimit: 8,
+                                // Update callback to display date and month in stacked format
+                                callback: function (val, index, ticks) {
+                                    // Approximate number of ticks we want to show
+                                    const totalTicks = ticks.length;
+                                    const ticksToShow = Math.min(8, totalTicks);
+                                    const interval = Math.ceil(totalTicks / ticksToShow);
+
+                                    // Show label if it's at an interval position or the first/last item
+                                    if (index % interval === 0 || index === 0 || index === totalTicks - 1) {
+                                        // Get the formatted date
+                                        const dateText = formattedDates[index];
+
+                                        // Split the date (e.g., "Mar 14" into "14" and "Mar")
+                                        const parts = dateText.split(' ');
+                                        if (parts.length === 2) {
+                                            return [parts[1], parts[0]]; // Return [day, month]
+                                        }
+                                        return dateText;
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Last 3 fetched readings to detect if the system is online/offline
+        let lastFetchedReadings = [];
+        let consecutiveIdenticalReadings = 0;
+        let isSystemOnline = true;
+
+        // Function to check if the system is online
+        function checkSystemOnlineStatus(latestReading) {
+            if (!latestReading) return;
+
+            // Convert to string for comparison
+            const readingString = JSON.stringify(latestReading);
+
+            // Check if this reading is the same as the previous one
+            if (lastFetchedReadings.length > 0 &&
+                readingString === lastFetchedReadings[lastFetchedReadings.length - 1]) {
+                consecutiveIdenticalReadings++;
+                console.log(`Consecutive identical readings: ${consecutiveIdenticalReadings}/2 required for offline status`);
+            } else {
+                // Reset the counter if different reading
+                if (consecutiveIdenticalReadings > 0) {
+                    console.log('Different data received - resetting counter');
+                }
+                consecutiveIdenticalReadings = 0;
+            }
+
+            // Add current reading to the array for next comparison
+            lastFetchedReadings.push(readingString);
+
+            // Keep only the last 3 readings
+            if (lastFetchedReadings.length > 3) {
+                lastFetchedReadings.shift();
+            }
+
+            // Update system status - need exactly 2 consecutive identical readings to be offline
+            if (consecutiveIdenticalReadings >= 2) {
+                if (isSystemOnline) {
+                    isSystemOnline = false;
+                    updateConnectionStatus(false);
+                    showOfflineNotification();
+                    console.log('System is now OFFLINE - Data unchanged for 2 consecutive readings');
+                }
+            } else {
+                if (!isSystemOnline) {
+                    isSystemOnline = true;
+                    updateConnectionStatus(true);
+                    console.log('System is now ONLINE - Data is changing');
+                }
+            }
+        }
+
+        // Function to show brief offline notification
+        function showOfflineNotification() {
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = 'offline-notification';
+
+            notification.innerHTML = `
+                <div class="offline-notification-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9.75 9.75 14.25 14.25"></path>
+                        <path d="M14.25 9.75 9.75 14.25"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                </div>
+                <div class="offline-notification-title">Connection Status</div>
+                <div>System offline: Identical values detected in three consecutive data fetches</div>
+            `;
+
+            // Check if an alert is already showing
+            const alertBackdrop = document.querySelector('.alert-backdrop');
+            if (alertBackdrop) {
+                // Detect if we're on mobile (screen width <= 768px)
+                const isMobileView = window.innerWidth <= 768;
+
+                // If alert exists, position accordingly based on device
+                notification.classList.add('shift-right');
+
+                // Short timeout to ensure smooth animation
+                setTimeout(() => {
+                    alertBackdrop.classList.add('shift-left');
+
+                    // For debugging purposes
+                    console.log(`Window positioned for ${isMobileView ? 'mobile' : 'desktop'} view`);
+                }, 20);
+            }
+
+            // Add to body
+            document.body.appendChild(notification);
+
+            // Remove after 2 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    // Start fading out the notification
+                    notification.style.opacity = '0';
+
+                    // Return alert to center if it exists
+                    const alertBackdrop = document.querySelector('.alert-backdrop');
+                    if (alertBackdrop) {
+                        // Short delay before moving the alert back to center
+                        setTimeout(() => {
+                            alertBackdrop.classList.remove('shift-left');
+                        }, 100);
+                    }
+
+                    // Remove notification after transition
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 400);
+                }
+            }, 2000);
+        }
+
+        // Update the connection status indicator
+        function updateConnectionStatus(isOnline) {
+            const statusElement = document.getElementById('connection-status');
+            const mobileStatusElement = document.getElementById('mobile-connection-status');
+            const mobileStatusItem = document.getElementById('mobile-status');
+            const appContainer = document.getElementById('app');
+
+            if (isOnline) {
+                statusElement.className = 'connection-status online';
+                statusElement.textContent = 'Online';
+                statusElement.title = 'System is connected and receiving new data';
+                mobileStatusElement.textContent = 'Online';
+                mobileStatusItem.className = 'mobile-menu-item online';
+                appContainer.classList.remove('offline-mode');
+                console.log('Status Updated: ONLINE ✓');
+            } else {
+                statusElement.className = 'connection-status offline';
+                statusElement.textContent = 'Offline';
+                statusElement.title = 'System is not receiving new data';
+                mobileStatusElement.textContent = 'Offline';
+                mobileStatusItem.className = 'mobile-menu-item offline';
+                appContainer.classList.add('offline-mode');
+                console.log('Status Updated: OFFLINE ✗');
+            }
+        }
+
+        // Fetch and update all data
+        async function fetchAndUpdateData() {
+            // Show loading animation
+            refreshBtn.classList.add('loading');
+
+            try {
+                // Fetch all data simultaneously
+                const [latestReading, last5Readings, weeklyData, monthlyData] = await Promise.all([
+                    SensorData.getLatestReading(),
+                    SensorData.getLast5Readings(),
+                    SensorData.getWeeklyAverages(),
+                    SensorData.getMonthlyAverages()
+                ]);
+
+                // Check if the system is online by comparing consecutive readings
+                if (latestReading) {
+                    console.log('Data received:', new Date().toLocaleTimeString());
+                    checkSystemOnlineStatus(latestReading);
+                }
+
+                // Cache the data for immediate access when switching metrics
+                window.cachedLast5Readings = last5Readings;
+                window.cachedWeeklyData = weeklyData;
+                window.cachedMonthlyData = monthlyData;
+
+                // Update UI based on whether system is online or offline
+                if (isSystemOnline) {
+                    // System is online, update everything normally
+                    requestAnimationFrame(() => {
+                        updateCurrentReadings(latestReading);
+                        initRecentChart(last5Readings, currentRecentMetric);
+                        initWeeklyChart(weeklyData, currentWeeklyMetric);
+                        initMonthlyChart(monthlyData, currentMonthlyMetric);
+                    });
+
+                    // Check for threshold alerts
+                    checkThresholdsAndAlert(latestReading);
+                } else {
+                    // System is offline, use the cached data but keep UI updated
+                    // This keeps the refresh working, but uses the last known good data
+                    console.log('System is offline. Using cached data for UI updates.');
+
+                    // We still update the UI with the same data to maintain UI responsiveness
+                    // but we don't trigger new alerts since the data isn't changing
+                    requestAnimationFrame(() => {
+                        updateCurrentReadings(latestReading);
+                    });
+                }
+
+                console.log('Data refresh attempt completed at:', new Date().toLocaleTimeString(),
+                    'System status:', isSystemOnline ? 'Online' : 'Offline');
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Don't show alert to user as it could be annoying during offline periods
+                console.log('Error fetching sensor data. Will retry on next interval.');
+
+                // Error in fetching could also indicate system is offline
+                if (isSystemOnline) {
+                    isSystemOnline = false;
+                    updateConnectionStatus(false);
+                }
+            } finally {
+                refreshBtn.classList.remove('loading');
+            }
+        }
+
+        // Function to check readings against thresholds and show alerts
+        let alertUpdateCounter = 0;
+        let currentAlert = null;
+        let acknowledgedAlerts = {}; // Store acknowledged alerts to prevent repeatedly showing the same alert
+
+        function checkThresholdsAndAlert(reading) {
+            if (!reading) return;
+
+            // Increment counter for every data fetch
+            alertUpdateCounter++;
+
+            const alerts = [];
+            const currentTimestamp = new Date();
+            const formattedDate = formatAlertDate(currentTimestamp);
+
+            // Check temperature
+            if (SensorData.isAboveThreshold(reading.temperature, 'temperature')) {
+                // Only add if not recently acknowledged
+                const alertKey = 'temperature_high';
+                if (!isAlertAcknowledged(alertKey)) {
+                    alerts.push({
+                        type: 'temperature',
+                        key: alertKey,
+                        title: 'High Temperature Alert',
+                        message: `Temperature has reached ${reading.temperature.toFixed(1)}°C, exceeding the safe threshold of 40°C.`,
+                        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>',
+                        timestamp: currentTimestamp,
+                        formattedDate: formattedDate
+                    });
+                }
+            }
+
+            // Check humidity
+            if (reading.humidity > 90) {
+                const alertKey = 'humidity_high';
+                if (!isAlertAcknowledged(alertKey)) {
+                    alerts.push({
+                        type: 'humidity',
+                        key: alertKey,
+                        title: 'High Humidity Alert',
+                        message: `Humidity has reached ${Math.round(reading.humidity)}%, exceeding the safe threshold of 90%.`,
+                        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>',
+                        timestamp: currentTimestamp,
+                        formattedDate: formattedDate
+                    });
+                }
+            } else if (reading.humidity < 25) {
+                const alertKey = 'humidity_low';
+                if (!isAlertAcknowledged(alertKey)) {
+                    alerts.push({
+                        type: 'humidity',
+                        key: alertKey,
+                        title: 'Low Humidity Alert',
+                        message: `Humidity has dropped to ${Math.round(reading.humidity)}%, below the safe threshold of 25%.`,
+                        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>',
+                        timestamp: currentTimestamp,
+                        formattedDate: formattedDate
+                    });
+                }
+            }
+
+            // Check LPG
+            if (SensorData.isAboveThreshold(reading.lpg, 'lpg')) {
+                const alertKey = 'lpg_high';
+                if (!isAlertAcknowledged(alertKey)) {
+                    alerts.push({
+                        type: 'lpg',
+                        key: alertKey,
+                        title: 'High LPG Alert',
+                        message: `LPG level has reached ${Math.round(reading.lpg)} ppm, exceeding the safe threshold of 500 ppm.`,
+                        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>',
+                        timestamp: currentTimestamp,
+                        formattedDate: formattedDate
+                    });
+                }
+            }
+
+            // Check dust
+            if (SensorData.isAboveThreshold(reading.dust, 'dust')) {
+                const alertKey = 'dust_high';
+                if (!isAlertAcknowledged(alertKey)) {
+                    alerts.push({
+                        type: 'dust',
+                        key: alertKey,
+                        title: 'High Dust Alert',
+                        message: `Dust level has reached ${reading.dust.toFixed(1)} μg/m³, exceeding the safe threshold of 400 μg/m³.`,
+                        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg>',
+                        timestamp: currentTimestamp,
+                        formattedDate: formattedDate
+                    });
+                }
+            }
+
+            // Clean up acknowledged alerts that have returned to normal
+            cleanupAcknowledgedAlerts(reading);
+
+            // Display alerts if there are any and following the rules
+            if (alerts.length > 0) {
+                // If we have alerts to show and it's time to show them (initial alert or after 5 cycles)
+                if (!currentAlert || alertUpdateCounter >= 5) {
+                    alertUpdateCounter = 0; // Reset counter
+                    showAlerts(alerts);
+                }
+            } else {
+                // No thresholds exceeded, keep counting for cycles
+                if (alertUpdateCounter >= 5) {
+                    alertUpdateCounter = 0; // Reset counter after 5 cycles
+                }
+            }
+        }
+
+        // Function to format the date for alert display
+        function formatAlertDate(date) {
+            // Format: "13 April 2025 11:00 PM"
+            const options = {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            };
+            return date.toLocaleString('en-US', options);
+        }
+
+        // Function to check if an alert has been acknowledged
+        function isAlertAcknowledged(alertKey) {
+            return acknowledgedAlerts.hasOwnProperty(alertKey) &&
+                (new Date().getTime() - acknowledgedAlerts[alertKey]) < (60 * 60 * 1000); // 1 hour cooldown
+        }
+
+        // Clean up acknowledged alerts that have returned to normal
+        function cleanupAcknowledgedAlerts(reading) {
+            // Remove acknowledged alerts for values that are now normal
+            if (!SensorData.isAboveThreshold(reading.temperature, 'temperature') && acknowledgedAlerts.hasOwnProperty('temperature_high')) {
+                delete acknowledgedAlerts.temperature_high;
+            }
+
+            if (reading.humidity <= 90 && acknowledgedAlerts.hasOwnProperty('humidity_high')) {
+                delete acknowledgedAlerts.humidity_high;
+            }
+
+            if (reading.humidity >= 25 && acknowledgedAlerts.hasOwnProperty('humidity_low')) {
+                delete acknowledgedAlerts.humidity_low;
+            }
+
+            if (!SensorData.isAboveThreshold(reading.lpg, 'lpg') && acknowledgedAlerts.hasOwnProperty('lpg_high')) {
+                delete acknowledgedAlerts.lpg_high;
+            }
+
+            if (!SensorData.isAboveThreshold(reading.dust, 'dust') && acknowledgedAlerts.hasOwnProperty('dust_high')) {
+                delete acknowledgedAlerts.dust_high;
+            }
+        }
+
+        // Function to display alerts
+        function showAlerts(alerts) {
+            const alertContainer = document.getElementById('alert-container');
+
+            // If there's already an alert showing and the user hasn't closed it yet, remove it
+            // to show the new one (alert update after 5 cycles)
+            if (currentAlert) {
+                alertContainer.innerHTML = '';
+            }
+
+            // Create the alert backdrop and box
+            const alertBackdrop = document.createElement('div');
+            alertBackdrop.className = 'alert-backdrop';
+
+            // Create a group alert if there are multiple alerts
+            if (alerts.length > 1) {
+                const alertBox = document.createElement('div');
+                alertBox.className = 'alert-box multiple';
+
+                // Use the timestamp from the most recent alert
+                const mostRecentDate = alerts.reduce((latest, alert) =>
+                    alert.timestamp > latest ? alert.timestamp : latest,
+                    alerts[0].timestamp
+                );
+
+                const formattedDate = formatAlertDate(mostRecentDate);
+                const alertKeysArray = JSON.stringify(alerts.map(a => a.key));
+
+                let alertContent = `
+                    <div class="alert-header">
+                        <div class="alert-icon-circle">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </div>
+                        <div class="alert-title">Multiple Alerts Detected</div>
+                        <div class="alert-date">${formattedDate}</div>
+                        <button class="alert-close" id="multiple-alert-close">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="alert-body">
+                        <div class="alert-message">
+                `;
+
+                alerts.forEach(alert => {
+                    alertContent += `<strong>${alert.title}:</strong> ${alert.message}<br><br>`;
+                });
+
+                alertContent += `
+                        </div>
+                        <button class="alert-button" id="multiple-alert-button">Acknowledge</button>
+                    </div>
+                `;
+
+                alertBox.innerHTML = alertContent;
+                alertBackdrop.appendChild(alertBox);
+
+                // Add event listeners after the element is added to the DOM
+                setTimeout(() => {
+                    const closeBtn = document.getElementById('multiple-alert-close');
+                    const acknowledgeBtn = document.getElementById('multiple-alert-button');
+
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', () => {
+                            acknowledgeAlerts(alerts.map(a => a.key));
+                        });
+                    }
+
+                    if (acknowledgeBtn) {
+                        acknowledgeBtn.addEventListener('click', () => {
+                            acknowledgeAlerts(alerts.map(a => a.key));
+                        });
+                    }
+                }, 0);
+
+            } else if (alerts.length === 1) {
+                // Just show the single alert
+                const alert = alerts[0];
+                const alertBox = document.createElement('div');
+                alertBox.className = `alert-box ${alert.type}`;
+
+                alertBox.innerHTML = `
+                    <div class="alert-header">
+                        <div class="alert-icon-circle">
+                            ${alert.icon}
+                        </div>
+                        <div class="alert-title">${alert.title}</div>
+                        <div class="alert-date">${alert.formattedDate}</div>
+                        <button class="alert-close" id="single-alert-close">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="alert-body">
+                        <div class="alert-message">${alert.message}</div>
+                        <button class="alert-button" id="single-alert-button">Acknowledge</button>
+                    </div>
+                `;
+
+                alertBackdrop.appendChild(alertBox);
+
+                // Add event listeners after the element is added to the DOM
+                setTimeout(() => {
+                    const closeBtn = document.getElementById('single-alert-close');
+                    const acknowledgeBtn = document.getElementById('single-alert-button');
+
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', () => {
+                            acknowledgeAlerts([alert.key]);
+                        });
+                    }
+
+                    if (acknowledgeBtn) {
+                        acknowledgeBtn.addEventListener('click', () => {
+                            acknowledgeAlerts([alert.key]);
+                        });
+                    }
+                }, 0);
+            }
+
+            alertContainer.appendChild(alertBackdrop);
+            currentAlert = alerts;
+        }
+
+        // Function to acknowledge alerts and prevent them from showing again for a period
+        function acknowledgeAlerts(alertKeys) {
+            const now = new Date().getTime();
+
+            // Mark each alert as acknowledged with the current timestamp
+            alertKeys.forEach(key => {
+                acknowledgedAlerts[key] = now;
+            });
+
+            // Close the alert window
+            closeAlert();
+        }
+
+        // Function to close the alert
+        function closeAlert() {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = '';
+            currentAlert = null;
+            alertUpdateCounter = 0; // Reset the counter when alert is closed
+        }
+
+        // Make functions globally available
+        window.closeAlert = closeAlert;
+        window.acknowledgeAlerts = acknowledgeAlerts;
+
+        // Event listeners for chart filter buttons
+        document.querySelectorAll('.chart-controls .filter-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const metric = this.dataset.metric;
+                const parent = this.closest('.card-body');
+                const chartId = parent.querySelector('canvas').id;
+
+                // Update active button
+                parent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update chart based on type - fetch only fresh data from database
+                if (chartId === 'recent-chart') {
+                    currentRecentMetric = metric;
+                    // Fetch fresh data from database 
+                    SensorData.getLast5Readings().then(data => {
+                        window.cachedLast5Readings = data;
+                        initRecentChart(data, metric);
+                    });
+                } else if (chartId === 'weekly-chart') {
+                    currentWeeklyMetric = metric;
+                    // Fetch fresh data from database
+                    SensorData.getWeeklyAverages().then(data => {
+                        window.cachedWeeklyData = data;
+                        initWeeklyChart(data, metric);
+                    });
+                } else if (chartId === 'monthly-chart') {
+                    currentMonthlyMetric = metric;
+                    // Fetch fresh data from database
+                    SensorData.getMonthlyAverages().then(data => {
+                        window.cachedMonthlyData = data;
+                        initMonthlyChart(data, metric);
+                    });
+                }
+            });
+        });
+
+        // Event listener for refresh button
+        refreshBtn.addEventListener('click', fetchAndUpdateData);
+
+        // Event listener for settings button
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsDropdown.classList.toggle('show');
+        });
+
+        // Close settings dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!settingsBtn.contains(e.target) && !settingsDropdown.contains(e.target)) {
+                settingsDropdown.classList.remove('show');
+            }
+        });
+
+        // Event listener for logout button
+        logoutBtn.addEventListener('click', function () {
+            logoutUser(); // From auth.js
+        });
+
+        // Initialize the dashboard
+        async function initDashboard() {
+            await initUserProfile();
+            await fetchAndUpdateData();
+
+            // Initialize with online status
+            isSystemOnline = true;
+            updateConnectionStatus(true);
+
+            // Reset any previous state
+            lastFetchedReadings = [];
+            consecutiveIdenticalReadings = 0;
+
+            // Set up auto-refresh (every 8 seconds)
+            setInterval(fetchAndUpdateData, 8 * 1000);
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Add mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenuDropdown = document.getElementById('mobile-menu-dropdown');
+        const mobileUserFullName = document.getElementById('mobile-user-fullname');
+        const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+
+        // Update mobile user name
+        function updateMobileUserName(name) {
+            mobileUserFullName.textContent = name;
+        }
+
+        // Toggle mobile menu
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileMenuDropdown.classList.toggle('show');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!mobileMenuBtn.contains(e.target) && !mobileMenuDropdown.contains(e.target)) {
+                mobileMenuDropdown.classList.remove('show');
+            }
+        });
+
+        // Mobile logout button click
+        mobileLogoutBtn.addEventListener('click', () => {
+            logoutUser();
+        });
+    </script>
+</body>
+
+</html>

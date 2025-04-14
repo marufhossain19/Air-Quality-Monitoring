@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - AirQuality Dashboard</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231a2a6c'/%3E%3Cpath fill='rgba(255, 255, 255, 0.7)' d='M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z' transform='scale(0.6) translate(8, 8)'/%3E%3C/svg%3E"
+        type="image/svg+xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #08095b, #13a9df);
+            background-size: 300% 300%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: gradient 15s ease infinite;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Outermost circle with only border */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 97vmin;
+            height: 97vmin;
+            border-radius: 50%;
+            border: 2px solid rgba(19, 169, 223, 0.15);
+            box-shadow: 0 0 30px rgba(19, 169, 223, 0.1);
+            z-index: -3;
+            animation: borderPulse 10s ease-in-out infinite;
+        }
+
+        /* Middle circle */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vmin;
+            height: 80vmin;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(30, 41, 59, 0.4) 0%, rgba(17, 24, 39, 0.2) 70%, rgba(10, 15, 25, 0.1) 100%);
+            box-shadow: 0 0 30px rgba(19, 169, 223, 0.2);
+            z-index: -2;
+            animation: outerGlow 8s ease-in-out infinite;
+        }
+
+        /* Inner circle - using a pseudo-element of body for better positioning */
+        .inner-circle {
+            display: none;
+        }
+
+        /* Animated dots */
+        .orbiting-dot {
+            position: absolute;
+            top: calc(50% - 5px);
+            /* Half the height to center perfectly */
+            left: calc(50% - 5px);
+            /* Half the width to center perfectly */
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            transform-origin: 5px 5px;
+            /* Center of the dot */
+            z-index: -1;
+        }
+
+        .orbiting-dot:nth-child(1) {
+            background-color: #ffffff;
+            /* Coral/Orange */
+            animation: orbit 18s linear infinite;
+        }
+
+        .orbiting-dot:nth-child(2) {
+            background-color: #4cd2ff;
+            /* Light Blue */
+            animation: orbit-reverse 20s linear infinite;
+        }
+
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateX(48.5vmin);
+            }
+
+            to {
+                transform: rotate(360deg) translateX(48.5vmin);
+            }
+        }
+
+        @keyframes orbit-reverse {
+            from {
+                transform: rotate(0deg) translateX(48.5vmin);
+            }
+
+            to {
+                transform: rotate(-360deg) translateX(48.5vmin);
+            }
+        }
+
+        @keyframes borderPulse {
+
+            0%,
+            100% {
+                border-color: rgba(19, 169, 223, 0.15);
+                box-shadow: 0 0 30px rgba(19, 169, 223, 0.1);
+            }
+
+            50% {
+                border-color: rgba(19, 169, 223, 0.3);
+                box-shadow: 0 0 50px rgba(19, 169, 223, 0.2);
+            }
+        }
+
+        @keyframes outerGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px rgba(19, 169, 223, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(19, 169, 223, 0.3);
+            }
+        }
+
+        @keyframes innerGlow {
+            0% {
+                box-shadow: inset 0 0 20px rgba(19, 169, 223, 0.2);
+            }
+
+            100% {
+                box-shadow: inset 0 0 35px rgba(19, 169, 223, 0.3);
+            }
+        }
+
+        /* Responsive adjustments for the circles */
+        @media (max-width: 768px) {
+            body::before {
+                width: 110vmin;
+                height: 110vmin;
+            }
+
+            body::after {
+                width: 90vmin;
+                height: 90vmin;
+            }
+
+            @keyframes orbit {
+                from {
+                    transform: rotate(0deg) translateX(55vmin);
+                }
+
+                to {
+                    transform: rotate(360deg) translateX(55vmin);
+                }
+            }
+
+            @keyframes orbit-reverse {
+                from {
+                    transform: rotate(0deg) translateX(55vmin);
+                }
+
+                to {
+                    transform: rotate(-360deg) translateX(55vmin);
+                }
+            }
+        }
+
+        /* Ensure better visibility on very small screens */
+        @media (max-width: 480px) {
+            .orbiting-dot {
+                width: 8px;
+                height: 8px;
+                top: calc(50% - 4px);
+                left: calc(50% - 4px);
+                transform-origin: 4px 4px;
+            }
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .auth-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+            width: 90%;
+            max-width: 380px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-logo {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 16px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #4158D0, #08095b);
+            border-radius: 50%;
+            padding: 12px;
+        }
+
+        .auth-logo svg {
+            width: 100%;
+            height: 100%;
+            fill: white;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .auth-form {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .form-field {
+            position: relative;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            padding: 12px;
+        }
+
+        .form-field:focus-within {
+            border-color: #4158D0;
+            border-width: 2px;
+            box-shadow: none;
+            background-color: #fff;
+        }
+
+        label {
+            display: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            font-size: 0.95rem;
+            background-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: transparent;
+            outline: none;
+            box-shadow: none;
+            background-color: transparent;
+        }
+
+        input::placeholder {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .password-strength {
+            height: 3px;
+            margin-top: 6px;
+            border-radius: 1.5px;
+            background-color: #f0f0f0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak {
+            width: 33%;
+            background-color: #ff4d4d;
+        }
+
+        .strength-medium {
+            width: 66%;
+            background-color: #ffb74d;
+        }
+
+        .strength-strong {
+            width: 100%;
+            background-color: #4caf50;
+        }
+
+        .password-helper {
+            font-size: 0.7rem;
+            color: #777;
+            margin-top: 4px;
+            transition: all 0.3s ease;
+            margin-bottom: 0;
+        }
+
+        .form-error {
+            color: #e53935;
+            font-size: 0.8rem;
+            margin: 0 0 12px 0;
+            min-height: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .form-error:not(:empty) {
+            min-height: 20px;
+            max-height: 60px;
+            padding: 4px 0;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #4158D0, #08095b);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            margin-top: 0;
+        }
+
+        .btn-primary:hover {
+            box-shadow: none;
+            transform: translateY(0);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .auth-links {
+            margin-top: 12px;
+            color: #666;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .auth-links a {
+            color: #4158D0;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .auth-links a:hover {
+            color: #3b51b3;
+            text-decoration: underline;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        /* Shake animation for errors */
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.6s cubic-bezier(.36, .07, .19, .97) both;
+        }
+
+        /* Success animation */
+        @keyframes success-pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-icon {
+            display: none;
+            color: #4caf50;
+            font-size: 50px;
+            margin: 0 auto 15px;
+            width: 60px;
+            height: 60px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: success-pulse 0.6s forwards;
+        }
+
+        .success-message {
+            display: none;
+        }
+
+        /* Hide the auth-logo when success message is shown */
+        .success-message:not([style*="display: none"])~.auth-logo,
+        body:has(.success-message[style*="display: block"]) .auth-logo {
+            display: none;
+        }
+
+        .success-message h2 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .success-message p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .redirect-msg {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 25px 20px;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+                margin-bottom: 16px;
+            }
+
+            .auth-logo {
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="orbiting-dot"></div>
+    <div class="orbiting-dot"></div>
+    <div class="auth-container">
+        <div class="auth-logo">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3zM8 13h2.55v3h2.9v-3H16l-4-4z" />
+            </svg>
+        </div>
+
+        <div id="register-form">
+            <h1>Join AirQuality</h1>
+
+            <div class="auth-form">
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Email Address" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="password-helper">Password must be at least 8 characters long</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <div class="form-field">
+                        <label for="confirm-password">Confirm</label>
+                        <input type="password" id="confirm-password" name="confirm-password"
+                            placeholder="Confirm Password" required>
+                    </div>
+                </div>
+
+                <div class="form-error" id="register-error"></div>
+
+                <button type="button" id="register-btn" class="btn-primary">
+                    Create Account
+                    <span class="spinner"></span>
+                </button>
+            </div>
+
+            <div class="auth-links">
+                Already have an account? <a href="login.html">Login</a>
+            </div>
+        </div>
+
+        <div id="success-message" class="success-message">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#4caf50" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                </svg>
+            </div>
+            <h2>Registration Successful!</h2>
+            <p>Your account has been created successfully.</p>
+
+        </div>
+    </div>
+
+    <!-- Include auth.js script -->
+    <script src="js/auth.js"></script>
+
+    <script>
+        // DOM Elements
+        const registerFormContainer = document.getElementById('register-form');
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const registerBtn = document.getElementById('register-btn');
+        const successMessage = document.getElementById('success-message');
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const { isLoggedIn } = await checkAuthStatus();
+                if (isLoggedIn) {
+                    // Redirect to dashboard if already logged in
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        });
+
+        // Event Listeners
+        registerBtn.addEventListener('click', handleRegistration);
+
+        // Also listen for Enter key in confirm password field
+        confirmPasswordInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                handleRegistration();
+            }
+        });
+
+        // Registration function
+        async function handleRegistration() {
+            console.log('Registration handler triggered');
+
+            // Clear previous errors
+            const registerError = document.getElementById('register-error');
+            if (registerError) {
+                registerError.textContent = '';
+            }
+
+            // Get input values
+            const username = usernameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Validate inputs
+            if (!username) {
+                showError('Username is required');
+                usernameInput.focus();
+                return;
+            }
+
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters long');
+                usernameInput.focus();
+                return;
+            }
+
+            if (!email) {
+                showError('Email address is required');
+                emailInput.focus();
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                showError('Please enter a valid email address');
+                emailInput.focus();
+                return;
+            }
+
+            if (!password) {
+                showError('Password is required');
+                passwordInput.focus();
+                return;
+            }
+
+            if (password.length < 8) {
+                showError('Password must be at least 8 characters long');
+                passwordInput.focus();
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                confirmPasswordInput.focus();
+                return;
+            }
+
+            // Show loading state
+            registerBtn.classList.add('btn-loading');
+            registerBtn.disabled = true;
+
+            try {
+                console.log('Calling registerUser with:', email, 'password (hidden)', username);
+                // Call registration function with username as fullName
+                const result = await registerUser(email, password, username);
+                console.log('Registration result:', result);
+
+                if (result.success) {
+                    // Show success message
+                    registerFormContainer.style.display = 'none';
+                    successMessage.style.display = 'block';
+
+                    // Hide the auth-logo
+                    const authLogo = document.querySelector('.auth-logo');
+                    if (authLogo) {
+                        authLogo.style.display = 'none';
+                    }
+
+                    // Make sure the success icon is visible
+                    const successIcon = successMessage.querySelector('.success-icon');
+                    if (successIcon) {
+                        successIcon.style.display = 'flex';
+                    }
+
+                    console.log('Registration successful! Redirecting to login page in 1.5 seconds...');
+
+                    // Auto-redirect to login page after a shorter delay
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
+                } else {
+                    // Handle specific errors
+                    let errorMessage = result.message || 'Registration failed. Please try again.';
+
+                    // More user-friendly error messages for common issues
+                    if (errorMessage.includes('email already registered')) {
+                        errorMessage = 'This email is already registered. Please use a different email or try logging in.';
+                    } else if (errorMessage.includes('password')) {
+                        errorMessage = 'Password is too weak. Please use at least 8 characters with letters and numbers.';
+                    } else if (errorMessage.includes('Connection error')) {
+                        errorMessage = 'Server connection error. Please ensure the server is running.';
+                    }
+
+                    showError(errorMessage);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('An error occurred. Please make sure the server is running and try again.');
+            } finally {
+                // Reset loading state
+                registerBtn.classList.remove('btn-loading');
+                registerBtn.disabled = false;
+            }
+        }
+
+        // Helper function to show error
+        function showError(message) {
+            const registerError = document.getElementById('register-error');
+            if (registerError) {
+                registerError.textContent = message;
+                registerError.parentElement.classList.add('shake');
+
+                // Remove shake class after animation completes
+                setTimeout(() => {
+                    registerError.parentElement.classList.remove('shake');
+                }, 600);
+            }
+        }
+
+        // Email validation function
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+    </script>
+</body>
+
+</html>

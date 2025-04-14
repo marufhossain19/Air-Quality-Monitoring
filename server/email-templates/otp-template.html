@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your OTP Code</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #071654, #0F2B8A, #13a9df);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .logo {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 15px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        h1 {
+            font-size: 26px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .subheader {
+            font-size: 16px;
+            margin-top: 10px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .content {
+            padding: 30px 25px;
+            color: #334155;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 0 0 20px;
+        }
+
+        .otp-container {
+            background: linear-gradient(to right, #f1f5f9, #e2e8f0);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 25px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .otp-code {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: #0F2B8A;
+            margin: 10px 0;
+        }
+
+        .expiry {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 14px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .team-name {
+            font-weight: 600;
+            color: #0F2B8A;
+        }
+
+        .help {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f1f5f9;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .help a {
+            color: #0F2B8A;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path
+                        d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" />
+                </svg>
+            </div>
+            <h1>Air Quality Monitoring</h1>
+            <div class="subheader">Secure Authentication</div>
+        </div>
+
+        <div class="content">
+            <p>Hello,</p>
+            <p>You requested a one-time password for your Air Quality Monitoring account. Please use the code below to
+                verify your identity:</p>
+
+            <div class="otp-container">
+                <div class="otp-code">{{OTP}}</div>
+                <div class="expiry">This code will expire in 10 minutes</div>
+            </div>
+
+            <p>If you did not request this code, please ignore this email or contact support if you have any concerns
+                about your account security.</p>
+
+            <div class="help">
+                Having trouble? Contact our support team at <a
+                    href="mailto:support@airquality.com">support@airquality.com</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>All the best,</p>
+            <p class="team-name">The Air Quality Monitoring Team</p>
+            <p>&copy; 2023 Air Quality Monitoring. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>
